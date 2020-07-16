@@ -1,6 +1,6 @@
-//import * as Vec3Func from './functions/Vec3Func.js';
+import * as Vec3Func from './functions/Vec3Func.js';
 
-class Vec3 extends Array {
+export class Vec3 extends Array {
     constructor(x = 0, y = x, z = x) {
         super(x, y, z);
         return this;
