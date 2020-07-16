@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGL Mouse Trail</title>
+    <style>
+        :root {
+            overflow: hidden;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="module">
+        import {
+            Renderer,
+            Camera,
+            Orbit,
+            Transform,
+            Geometry,
+            Vec3,
+            Color,
+            Polyline
+        } from "../OGL/index.mjs";
+        {
+            // Create the WebGL context, and add the canvas to the DOM
+            const renderer = new Renderer({ dpr: 2 });
+            const gl = renderer.gl;
+            document.body.appendChild(gl.canvas);
+            gl.clearColor(0.3, 0.05, 0.1, 1);
+
+            // Create camera and scene
+            const camera = new Camera(gl);
+            camera.position.z = 3;
+
+            const controls = new Orbit(camera);
+            const scene = new Transform();
+            let polyline;
+
+            function resize() {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.perspective({ aspect: gl.canvas.width / gl.canvas.height });
+                if (polyline) polyline.resize();
+            }
+            window.addEventListener("resize", resize, false);
+
+            // Create an array of Vec3s (eg [[0, 0, 0], ...])
+            // sine wave
+            /*
+            const count = 100;
+            const points = [];
+            for (let i = 0; i < count; i++) {
+                const x = (i / (count - 1) - 0.5) * 3;
+                const y = Math.sin(i / 10.5) * 0.5;
+                const z = 0;
+
+                points.push(new Vec3(x, y, z));
+            }
+            */
+
+            // square
+            /*
+            const points = [];
+            points.push(new Vec3(0, -1, 0));
+            points.push(new Vec3(-1, -1, 0));
+            points.push(new Vec3(-1, 1, 0));
+            points.push(new Vec3(1, 1, 0));
+            points.push(new Vec3(1, -1, 0));
+            points.push(new Vec3(0, -1, 0));
+            */
+
+            // circle
+            
+            const count = 100;
+            const points = [];
+            for (let i = 0; i < count; i++) {
+                const angle = i / (count - 2) * Math.PI * 2;
+                const x = Math.cos(angle);
+                const y = Math.sin(angle);
+                const z = 0;
+
+                points.push(new Vec3(x, y, z));
+            };
+            
+
+            polyline = new Polyline(gl, {
+                points,
+                uniforms: {
+                    uColor: { value: new Color("#A1485E") },
+                    uThickness: { value: 20 },
+                    //uMiter: { value: 0 }
+                }
+            });
+            polyline.mesh.setParent(scene);
+
+            // Call initial resize after creating the polyline to update 
+            // its resolution uniforms
+            resize();
+
+            // render scene in an update loop
+            requestAnimationFrame(update);
+            function update(t) {
+                requestAnimationFrame(update);
+                controls.update();
+                renderer.render({ scene, camera });
+            }
+
+        }
+    </script>
+</body>
+
+</html>
