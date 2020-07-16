@@ -30,6 +30,46 @@
             Polyline
         } from "../OGL/index.mjs";
         {
+            const vertex = `
+            attribute vec3 position;
+            attribute vec3 next;
+            attribute vec3 prev;
+            attribute vec2 uv;
+            attribute float side;
+
+            uniform vec2 uResolution;
+
+            vec4 getPosition() {
+                vec2 aspect = vec2(uResolution.x / uResolution.y, 1);
+                vec2 nextScreen = next.xy * aspect;
+                vec2 prevScreen = prev.xy * aspect;
+
+                // determine the direction from the previous to the next point
+                vec2 tangent = normalize(nextScreen - prevScreen);
+
+                // rotate it 90 degrees to find the normal
+                vec2 normal = vec2(-tangent.y, tangent.x);
+                normal /= aspect;
+
+                // line's width, without this, the line width = whole screen
+                //normal *= 0.1;   // simple line
+                //normal *= uv.y * 0.2;   // triangle shape
+                //normal *= pow(uv.y, 2.0) * 0.2; // curved triangle
+                //normal *= cos(uv.y * 12.56) * 0.1 + 0.2;    // curvy line
+                normal *= (1.0 - pow(abs(uv.y - 0.5) * 2.0, 2.0)) * 0.2;    // thin on sides, thick in the middle
+                
+                vec4 current = vec4(position, 1);
+
+                // push our vertices apart along the normal
+                current.xy -= normal * side;
+                return current;
+            }
+
+            void main() {
+                gl_Position = getPosition();
+            }
+        `;
+
             // Create the WebGL context, and add the canvas to the DOM
             const renderer = new Renderer({ dpr: 2 });
             const gl = renderer.gl;
@@ -37,16 +77,16 @@
             gl.clearColor(0.3, 0.05, 0.1, 1);
 
             // Create camera and scene
-            const camera = new Camera(gl);
-            camera.position.z = 3;
+            //const camera = new Camera(gl);
+            //camera.position.z = 3;
 
-            const controls = new Orbit(camera);
+            //const controls = new Orbit(camera);
             const scene = new Transform();
             let polyline;
 
             function resize() {
                 renderer.setSize(window.innerWidth, window.innerHeight);
-                camera.perspective({ aspect: gl.canvas.width / gl.canvas.height });
+                //camera.perspective({ aspect: gl.canvas.width / gl.canvas.height });
                 if (polyline) polyline.resize();
             }
             window.addEventListener("resize", resize, false);
@@ -77,7 +117,7 @@
             */
 
             // circle
-            
+            /*
             const count = 100;
             const points = [];
             for (let i = 0; i < count; i++) {
@@ -88,14 +128,23 @@
 
                 points.push(new Vec3(x, y, z));
             };
-            
+            */
+            const count = 40;
+            const points = [];
+            for (let i = 0; i < count; i++) {
+                const x = i / (count - 1) - 0.5;
+                const y = 0;
+                const z = 0;
+
+                points.push(new Vec3(x, y, z));
+            }
+
 
             polyline = new Polyline(gl, {
                 points,
+                vertex,
                 uniforms: {
                     uColor: { value: new Color("#A1485E") },
-                    uThickness: { value: 20 },
-                    //uMiter: { value: 0 }
                 }
             });
             polyline.mesh.setParent(scene);
@@ -108,8 +157,8 @@
             requestAnimationFrame(update);
             function update(t) {
                 requestAnimationFrame(update);
-                controls.update();
-                renderer.render({ scene, camera });
+                //controls.update();
+                renderer.render({ scene });
             }
 
         }
