@@ -1,4 +1,4 @@
-import { Vec3 } from '../math/Vec3.js';
+//import { Vec3 } from '../math/Vec3.js';
 
 // TODO: Handle context loss https://www.khronos.org/webgl/wiki/HandlingContextLost
 
@@ -13,7 +13,7 @@ import { Vec3 } from '../math/Vec3.js';
 const tempVec3 = new Vec3();
 let ID = 1;
 
-export class Renderer {
+class Renderer {
     constructor({
         canvas = document.createElement('canvas'),
         width = 300,

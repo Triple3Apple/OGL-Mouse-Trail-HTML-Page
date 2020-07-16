@@ -18,18 +18,17 @@
 </head>
 
 <body>
-    <script type="module">
-        import {
-            Renderer,
-            Camera,
-            Orbit,
-            Transform,
-            Geometry,
-            Vec3,
-            Color,
-            Polyline
-        } from "../OGL/index.mjs";
-        {
+    <script src="OGL/math/functions/Vec3Func.js"></script>
+    <script src="OGL/math/Vec3.js"></script>
+    <script src="OGL/core/Renderer.js"></script>
+    <script src="OGL/core/Transform.js"></script>
+    <script src="OGL/core/Geometry.js"></script>
+    
+    <script src="OGL/math/Color.js"></script>
+    <script src="OGL/extras/Polyline.js"></script>
+    <script>
+        
+        
             const vertex = `
             attribute vec3 position;
             attribute vec3 next;
@@ -239,7 +238,7 @@
 
                 renderer.render({ scene });
             }
-        }
+        
     </script>
 </body>
 

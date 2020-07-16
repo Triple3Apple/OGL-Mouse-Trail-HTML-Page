@@ -18,7 +18,7 @@
 // TODO: when would I disableVertexAttribArray ?
 // TODO: use offset/stride if exists
 
-import { Vec3 } from '../math/Vec3.js';
+//import { Vec3 } from '../math/Vec3.js';
 
 const tempVec3 = new Vec3();
 
@@ -28,7 +28,7 @@ let ATTR_ID = 1;
 // To stop inifinite warnings
 let isBoundsWarned = false;
 
-export class Geometry {
+class Geometry {
     constructor(gl, attributes = {}) {
         if (!gl.canvas) console.error('gl not passed as first argument to Geometry');
         this.gl = gl;
