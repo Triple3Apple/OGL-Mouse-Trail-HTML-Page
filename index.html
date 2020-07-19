@@ -15,10 +15,16 @@
             margin: 0;
         }
     </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <button style="top:0" id="addLine" class="ui">Add Line</button>
+    <button style="right:0" id="removeLine" class="ui">Remove Line</button>
+    <button style="right: 50%" id="randomColor" class="ui">Random Background Color</button>
+
     <script type="module">
+
         import {
             Renderer,
             Camera,
@@ -28,7 +34,7 @@
             Vec3,
             Color,
             Polyline
-        } from "../OGL/index.mjs";
+        } from "../OGL/index.js";
 
         const vertex = `
             attribute vec3 position;
@@ -53,7 +59,7 @@
                 normal *= 1.0 - pow(abs(uv.y - 0.5) * 2.0, 2.0);
                 float pixelWidth = 1.0 / (uResolution.y / uDPR);
                 normal *= pixelWidth * uThickness;
-                // When the points are on top of each other, 
+                // When the points are on top of each other,
                 // shrink the line to avoid artifacts.
                 float dist = length(nextScreen - prevScreen);
                 normal *= smoothstep(0.0, 0.02, dist);
@@ -66,20 +72,130 @@
                 gl_Position = getPosition();
             }
         `;
+        let lineAmount = 1;
+
+        //let buttons = document.getElementsByTagName("button");
+        let addButton = document.getElementById("addLine");
+        let removeButton = document.getElementById("removeLine");
+        let randomBGColorButton = document.getElementById("randomColor");
+
+        addButton.addEventListener("click", addLine)
+        removeButton.addEventListener("click", removeLine);
+        randomBGColorButton.addEventListener("click", getRandomBGColor);
+
+        let colors = ["#e09f7d", "#ef5d60", "#ec4067", "#a01a7d", "#311847", "#FF9AA2",
+            "#C7CEEA", "#FFDAC1", "#B5EAD7", "#C8C4E8", "#8DD8FF", "#FF677B",
+            "#8192A6", "#BB8188", "#75D0FF", "#6BDEE8", "#6BE8AC", "#FCFFF5",
+            "#CBDBD7", "#91AAC4", "#193441", "#3E606F", "#17162F", "#89346D",
+            "#C76058", "#FFB248", "#E8C475", "#C78C5D", "#8EB5FB", "#715DC7"];
+        // some colors from a pallete made by Chan Alex
+        // https://color.adobe.com/search?q=storm&t=tag
+
+        function getRandomBGColor(event) {
+
+            event.preventDefault();
+
+            for (let i = 0; i < rgb.length; i++) {
+                rgb[i] = Math.random();
+            }
+            gl.clearColor(rgb[0], rgb[1], rgb[2], 1);
+        }
+
+        function addLine(event) {
+
+            event.preventDefault();
+
+            //alert("add line button clicked");
+            if (lineAmount < 15) {
+
+                lineAmount++;
+                //testing
+                const line = {
+                    spring: random(0.02, 0.1),
+                    friction: random(0.7, 0.95),
+                    mouseVelocity: new Vec3(),
+                    mouseOffset: new Vec3(random(-1, 1) * 0.02)
+                };
+
+                // Create an array of Vec3s (eg [[0, 0, 0], ...])
+                const count = 20;
+                const points = (line.points = []);
+                let randColor = colors[Math.floor(Math.random() * colors.length)];
+                for (let i = 0; i < count; i++) points.push(new Vec3());
+
+                let totallyRandomColorChance = Math.floor(Math.random() * 10);
+                
+                if (totallyRandomColorChance <= 2) {
+                    let hexVal = Math.floor(Math.random() * 0xFFFFFF);
+
+                    let randColor = "#" + hexVal.toString(16);
+
+                    console.log(typeof(randColor));
+                    console.log("generating totally random color");
+                }
+                
+                
+                console.log(randColor);
+
+                line.polyline = new Polyline(gl, {
+                    points,
+                    vertex,
+                    uniforms: {
+                        //uColor: { value: new Color(randColor) },
+                        uColor: { value: new Color(randColor) },
+                        uThickness: { value: random(20, 50) }
+                    }
+                });
+
+                line.polyline.mesh.setParent(scene);
+
+                lines.push(line);
+
+            }
+        }
+
+        function removeLine(event) {
+
+            event.preventDefault();
+
+            //alert("REMOVE line button clicked");
+            if (lineAmount > 0) {
+                lineAmount--;
+                //line.polyline.mesh.setParent(scene);
+                console.log(lines);
+                //let templine = lines.pop();
+                //scene.removeChild(lines.length - 1);
+                let lastLine = lines[lines.length - 1];
+                scene.removeChild(lastLine.polyline.mesh)
+                lines.pop();
+                console.log(lastLine);
+                console.log(lines);
+            }
+
+        }
+
+
+
+
         // Create the WebGL context, and add the canvas to the DOM
         const renderer = new Renderer({ dpr: 2 });
         const gl = renderer.gl;
         document.body.appendChild(gl.canvas);
-        gl.clearColor(0.3, 0.05, 0.1, 1);
+        let rgb = [0.3, 0.05, 0.1]
+
+        //gl.clearColor(0.3, 0.05, 0.1, 1);
+        gl.clearColor(rgb[0], rgb[1], rgb[2], 1);
+
 
         // Create camera and scene
         //const camera = new Camera(gl);
         //camera.position.z = 3;
 
         //const controls = new Orbit(camera);
+
         const scene = new Transform();
         //let polyline;
-        const lines = [];
+        let lines = [];
 
         function resize() {
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -94,38 +210,43 @@
             return a * (1.0 - alpha) + b * alpha;
         }
 
+        let tempLineAmount = lineAmount;
+
         // We're going to make a number of different coloured lines for fun.
-        ["#e09f7d", "#ef5d60", "#ec4067", "#a01a7d", "#311847"].forEach(
+        colors.forEach(
             (color, i) => {
 
-                // Store a few values for each lines' randomised spring movement
-                const line = {
-                    spring: random(0.02, 0.1),
-                    friction: random(0.7, 0.95),
-                    mouseVelocity: new Vec3(),
-                    mouseOffset: new Vec3(random(-1, 1) * 0.02)
-                };
+                if (i < tempLineAmount) {
+                    // Store a few values for each lines' randomised spring movement
+                    const line = {
+                        spring: random(0.02, 0.1),
+                        friction: random(0.7, 0.95),
+                        mouseVelocity: new Vec3(),
+                        mouseOffset: new Vec3(random(-1, 1) * 0.02)
+                    };
 
-                // Create an array of Vec3s (eg [[0, 0, 0], ...])
-                const count = 20;
-                const points = (line.points = []);
-                for (let i = 0; i < count; i++) points.push(new Vec3());
+                    // Create an array of Vec3s (eg [[0, 0, 0], ...])
+                    const count = 20;
+                    const points = (line.points = []);
+                    for (let i = 0; i < count; i++) points.push(new Vec3());
 
-                line.polyline = new Polyline(gl, {
-                    points,
-                    vertex,
-                    uniforms: {
-                        uColor: { value: new Color(color) },
-                        uThickness: { value: random(20, 50) }
-                    }
-                });
+                    line.polyline = new Polyline(gl, {
+                        points,
+                        vertex,
+                        uniforms: {
+                            uColor: { value: new Color(colors[Math.floor(Math.random() * colors.length)]) },
+                            uThickness: { value: random(20, 50) }
+                        }
+                    });
 
-                line.polyline.mesh.setParent(scene);
+                    line.polyline.mesh.setParent(scene);
 
-                lines.push(line);
+                    lines.push(line);
+                }
+
             });
 
-        // Call initial resize after creating the polyline to update 
+        // Call initial resize after creating the polyline to update
         // its resolution uniforms
         resize();
 
@@ -162,7 +283,6 @@
         requestAnimationFrame(update);
         function update(t) {
             requestAnimationFrame(update);
-            //controls.update();
 
             // Update polyline input points
             lines.forEach(line => {
